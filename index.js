@@ -26,6 +26,7 @@ async function run() {
 
     const itemsDatabase = client.db("ecommerce");
     const itemsCollection = itemsDatabase.collection("items");
+    const usersCollection = itemsDatabase.collection("users");
 
     // fetching all products
     app.get("/items", async (req, res) => {
@@ -38,7 +39,7 @@ async function run() {
       try {
         const data = req.body;
         const insert = await itemsCollection.insertOne(data);
-        req.send(insert);
+        res.send(insert);
       } catch {
         res.send({ error: "error while adding items" });
       }
@@ -47,11 +48,35 @@ async function run() {
     // deletind product
     app.delete("/items/:id", async (req, res) => {
       try {
-        const remove = await itemsCollection.deleteOne({ id: new ObjectId(req.params.id) });
+        const remove = await itemsCollection.deleteOne({ _id: new ObjectId(req.params.id) });
         res.send(remove);
       } catch {
         res.send({ error: "error while deleting items" });
       }
+    });
+
+    // users api
+    // login
+    app.post("/login", async (req, res) => {
+      const { email, password } = req.body;
+      const check = await usersCollection.findOne({ email: email, password: password });
+
+      if (check) {
+        res.json({ id: check._id, name: check.name, email: check.email });
+      } else {
+        res.status(401).json({ error: "invalid email or password" });
+      }
+    });
+
+    // register
+    app.post("/register", async (req, res) => {
+      const { email, password } = req.body;
+      const check = await usersCollection.findOne({ email: email, password: password });
+      if (check) {
+        return res.status(400).json({ error: "user already exists" });
+      }
+      const createUser = await usersCollection.insertOne({ email: email, password: password });
+      res.status(201).json(createUser);
     });
   } finally {
   }
