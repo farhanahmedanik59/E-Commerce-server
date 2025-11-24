@@ -38,6 +38,8 @@ async function run() {
     app.post("/items", async (req, res) => {
       try {
         const data = req.body;
+        data.price = Number(data.price);
+        console.log(data);
         const insert = await itemsCollection.insertOne(data);
         res.send(insert);
       } catch {
@@ -53,6 +55,13 @@ async function run() {
       } catch {
         res.send({ error: "error while deleting items" });
       }
+    });
+    // product by id
+    app.get("/products/:id", async (req, res) => {
+      console.log(req);
+      const { id } = req.params;
+      const find = await itemsCollection.findOne({ _id: new ObjectId(id) });
+      res.status(200).json(find);
     });
 
     // users api
